@@ -23,6 +23,9 @@ from Yowsup.Contacts.contacts import WAContactsSyncRequest
 import threading,time, base64
 from collections import deque
 
+import re
+import json
+
 from Yowsup.connectionmanager import YowsupConnectionManager
 
 DEFAULT_CONFIG = os.path.join(parentdir, "config.madbot")
@@ -84,7 +87,7 @@ class madbotapi:
 
         self.phoneNumber = phoneNumber
         self.jid = "%s@s.whatsapp.net" % phoneNumber
-        self.sendReceipts = True # Auto ack flag
+        self.sendReceipts = False # Auto ack flag, keep False while developing
         self.username = login
         self.password = password
         self.keepAlive = keepAlive
@@ -127,13 +130,41 @@ if __name__ == "__main__":
     bot = madbotapi()
     bot.read_messages()
 
-    readMsgs = [] # past tense
-    while bot.unreadMsges:
+    dbFile = os.path.join(parentdir, 'messages.json')
+
+    readMsgs = [] # holds msgs with #tags
+    while bot.unreadMsges: # process messages
         msgDict = bot.unreadMsges.pop()
         print msgDict["msg"], msgDict["jid"], msgDict["msgId"], msgDict["wantsReceipt"]
+        tags = re.findall('#[a-zA-Z0-9]+', msgDict["msg"])
+        if tags:
+            readMsgs.append({"tags": tags, "jid" : msgDict["jid"], "msg" : msgDict["msg"]})
+        else:
+            tags = re.findall('#', msgDict['msg']) # finds a # with no tag e.g. msg = "Hello # how are you?"
+            if tags:
+                readMsgs.append({"tags": ["#"], "jid" : msgDict["jid"], "msg" : msgDict["msg"]})
 
-        if msgDict["wantsReceipt"]:
-            readMsgs.append((msgDict["jid"], msgDict["msgId"]))
+
+    if os.path.isfile(dbFile):
+        try: # Read all data
+            with open(dbFile, 'r') as feed:
+                data = json.load(feed)
+        except IOError:
+            print "Unable to open JSON file"
+
+        try: # append new data and write all to file
+            with open(dbFile, 'w') as feed:
+                data.extend(readMsgs)
+                json.dump(data, feed)
+        except IOError:
+            print "unable to append to JSON file"
+    else: # initialize and feed data
+        try:
+            with open(dbFile, 'w') as feed:
+                json.dump(readMsgs, feed)
+        except IOError:
+            print "unable to create new file"
+
 
     #wa = WhatsappListenerClient(False)
     # with sendReceipt = True messages are sent back from server only once
