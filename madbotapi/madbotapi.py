@@ -165,24 +165,10 @@ class madbotapi:
 
 
 if __name__ == "__main__":
-    
     bot = madbotapi()
-#    bot.read_messages() # Read unread messages sent to madbot, think of making this a generator
-#    bot.send_message("919790744316", "Checking if send works")
-    mediaPath = "/home/dobby/.config/variety/Downloaded/Desktoppr/10164.jpg"
-    bot.upload_media(mediaPath)
-
-    usersFile = os.path.join(parentdir, 'users.json') # contains all registered users/grps
-
-    # trying to create a users.json
-    bot.get_group_info("919790744316-1391169216")
-    #
-    try:
-        with open(usersFile, 'r') as userInfo:
-            users = json.load(userInfo)
-    except IOError:
-        #        raise IOError("Couldn't find users.json")
-        pass
+    bot.read_messages() # Read unread messages sent to madbot, think of making this a generator
+    import time
+    bot.send_message("919790744316", "Updated messages @ %(tm_hour)d:%(tm_min)d:%(tm_sec)d" % time.localtime())
 
     readMsgs = [] # holds msgs with #tags
     while bot.unreadMsges: # process messages
@@ -191,13 +177,13 @@ if __name__ == "__main__":
         print msgDict["msg"], msgDict["jid"], msgDict["msgId"], msgDict["wantsReceipt"]
         tags = re.findall('#[a-zA-Z0-9]+', msgDict["msg"])
         if tags:
-            readMsgs.append({"tags": tags, "jid" : msgDict["jid"], "msg" : msgDict["msg"]})
+            readMsgs.append({"tags": tags, "jid" : msgDict["jid"], "msg" : msgDict["msg"], "time": msgDict["time"]})
         else:
             tags = re.findall('#', msgDict['msg']) # finds a # with no tag e.g. msg = "Hello # how are you?"
             if tags:
-                readMsgs.append({"tags": ["#"], "jid" : msgDict["jid"], "msg" : msgDict["msg"]})
+                readMsgs.append({"tags": ["#"], "jid" : msgDict["jid"], "msg" : msgDict["msg"], "time": msgDict["time"]})
 
-    dbFile = os.path.join(parentdir, 'messages.json')\
+    dbFile = os.path.join(parentdir, 'messages.json')
 
     if os.path.isfile(dbFile):
         try: # Read all data
@@ -219,6 +205,8 @@ if __name__ == "__main__":
         except IOError:
             print "unable to create new file"
 
+################# JUNK CODE SNIPPETS ############################
+
 #    bot.send_presence_available()
 #    bot.set_status("Hello World")
 #    bot.send_presence_unavailable()
@@ -228,3 +216,20 @@ if __name__ == "__main__":
     # bot.set_profile_pic(("/home/dobby/.config/variety/Downloaded/wallbase_leaves",))
     #wa.login(self.username, self.password)
     #bot.set_status("Hacking! :D")
+
+
+"""
+#    mediaPath = "/home/dobby/.config/variety/Downloaded/Desktoppr/10164.jpg"
+    bot.upload_media(mediaPath)
+
+    usersFile = os.path.join(parentdir, 'users.json') # contains all registered users/grps
+
+    # trying to create a users.json
+    bot.get_group_info("919790744316-1391169216")
+    #
+    try:
+        with open(usersFile, 'r') as userInfo:
+            users = json.load(userInfo)
+    except IOError:
+        #        raise IOError("Couldn't find users.json")
+        pass"""
