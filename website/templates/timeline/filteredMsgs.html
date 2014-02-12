@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Madbot - Ideas{% endblock %}
+
+{% block content %}
+    <p>Ideas</p>
+    {% for idea in ideas %}
+    <ul>
+        <li>From:{{idea.}} Time:{{}} Msg:{{}}</li>
+    </ul>
+    {% endfor %}
+{% endblock %}

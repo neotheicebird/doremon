@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Madbot - Tags{% endblock %}
+
+{% block content %}
+    <p>Tags</p>
+    {% for tag in tags %}
+    <ul>
+        <a href="/tags/{{tag}}">{{tag}}</a>
+    </ul>
+    {% endfor %}
+{% endblock %}
