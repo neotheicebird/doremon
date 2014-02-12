@@ -167,23 +167,30 @@ class madbotapi:
 if __name__ == "__main__":
     bot = madbotapi()
     bot.read_messages() # Read unread messages sent to madbot, think of making this a generator
-    import time
-    bot.send_message("919790744316", "Updated messages @ %(tm_hour)d:%(tm_min)d:%(tm_sec)d" % time.localtime())
+
+    registeredGrps = ['1391169216'] # add grp IDs here
 
     readMsgs = [] # holds msgs with #tags
     while bot.unreadMsges: # process messages
         msgDict = bot.unreadMsges.pop()
-        #if msgDict["jid"] in users:
-        print msgDict["msg"], msgDict["jid"], msgDict["msgId"], msgDict["wantsReceipt"]
-        tags = re.findall('#[a-zA-Z0-9]+', msgDict["msg"])
-        if tags:
-            readMsgs.append({"tags": tags, "jid" : msgDict["jid"], "msg" : msgDict["msg"], "time": msgDict["time"]})
-        else:
-            tags = re.findall('#', msgDict['msg']) # finds a # with no tag e.g. msg = "Hello # how are you?"
-            if tags:
-                readMsgs.append({"tags": ["#"], "jid" : msgDict["jid"], "msg" : msgDict["msg"], "time": msgDict["time"]})
 
-    dbFile = os.path.join(parentdir, 'messages.json')
+        tags = re.findall('#[a-zA-Z0-9]+', msgDict["msg"]) # find tags
+        grpId = re.findall('(?<=\-)(.*?)(?=\@)', msgDict["jid"]) # find grp id of msg
+
+        if any(regId in grpId for regId in registeredGrps): # checking if msg comes from a registered grp
+            if tags:
+                 readMsgs.append({"tags": tags, "jid" : msgDict["jid"],
+                                  "msg" : msgDict["msg"],
+                                  "time": msgDict["time"]})
+            else:
+                tags = re.findall('#', msgDict['msg']) # finds a # with no tag e.g. msg = "Hello # how are you?"
+                if tags:
+                    readMsgs.append({"tags": ["#<empty-tag>"],
+                                     "jid" : msgDict["jid"],
+                                     "msg" : msgDict["msg"],
+                                     "time": msgDict["time"]})
+
+    dbFile = os.path.join(parentdir, 'messages.json') # future: go for a proper db
 
     if os.path.isfile(dbFile):
         try: # Read all data
@@ -204,6 +211,10 @@ if __name__ == "__main__":
                 json.dump(readMsgs, feed)
         except IOError:
             print "unable to create new file"
+
+    from time import strftime
+    bot.send_message("919790744316", "Updated messages @ %s" %
+            strftime("%H:%M:%S")) # send admin regular updates
 
 ################# JUNK CODE SNIPPETS ############################
 
