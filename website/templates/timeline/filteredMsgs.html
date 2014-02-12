@@ -6,7 +6,7 @@
     <p>Ideas</p>
     {% for idea in ideas %}
     <ul>
-        <li>From:{{idea.}} Time:{{}} Msg:{{}}</li>
+        <li>From:{{idea.jid}} Time:{{idea.time}} Msg:{{idea.msg}}</li>
     </ul>
     {% endfor %}
 {% endblock %}

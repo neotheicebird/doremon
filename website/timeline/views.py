@@ -35,7 +35,10 @@ def tags(request):
 
 def filter_tags(request, tag):
     messages = extract_msgs(tags = [tag,])
-    
+    # edit jids
+    for msg in messages:
+        msg["jid"] = msg["jid"].split("@")[0] # wonder if this is the best way to do this??
+
     t = loader.get_template('filteredMsgs.html')
     c = Context({
         'ideas': messages,
