@@ -8,11 +8,14 @@ import os
 import json
 
 # Create your views here.
+"""
 MSG_FILEPATH = os.path.join(
                os.path.dirname(
                os.path.dirname(
                os.path.dirname(os.path.abspath(__file__)))),
                "messages.json")
+"""
+MSG_FILEPATH = "/home/dobby/Projects/madbot/messages.json" # Hardcoded for testing
 
 def home(request):
     t = loader.get_template('home.html')
