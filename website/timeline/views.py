@@ -38,6 +38,10 @@ def tags(request):
 
 def filter_tags(request, tag):
     messages = extract_msgs(tags = [tag,])
+
+    if not messages:
+        raise Http404
+
     # edit jids
     for msg in messages:
         msg["jid"] = msg["jid"].split("@")[0] # wonder if this is the best way to do this??
