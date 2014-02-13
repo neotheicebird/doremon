@@ -29,6 +29,7 @@ from collections import deque
 
 import re
 import json
+from time import strftime, sleep
 
 from Yowsup.connectionmanager import YowsupConnectionManager
 
@@ -165,82 +166,85 @@ class madbotapi:
 
 
 if __name__ == "__main__":
-    bot = madbotapi()
-    bot.read_messages() # Read unread messages sent to madbot, think of making this a generator
 
-    registeredGrps = ['1391169216'] # add grp IDs here
+    while True:
+        # Access whatsapp server every few mins and update messages.json
+        bot = madbotapi()
+        bot.read_messages() # Read unread messages sent to madbot, think of making this a generator
 
-    readMsgs = [] # holds msgs with #tags
-    while bot.unreadMsges: # process messages
-        msgDict = bot.unreadMsges.pop()
+        registeredGrps = ['1391169216'] # add grp IDs here
 
-        tags = re.findall('#[a-zA-Z0-9]+', msgDict["msg"]) # find tags
-        grpId = re.findall('(?<=\-)(.*?)(?=\@)', msgDict["jid"]) # find grp id of msg
+        readMsgs = [] # holds msgs with #tags
+        while bot.unreadMsges: # process messages
+            msgDict = bot.unreadMsges.pop()
 
-        if any(regId in grpId for regId in registeredGrps): # checking if msg comes from a registered grp
-            if tags:
-                 readMsgs.append({"tags": tags, "jid" : msgDict["jid"],
-                                  "msg" : msgDict["msg"],
-                                  "time": msgDict["time"]})
-            else:
-                tags = re.findall('#', msgDict['msg']) # finds a # with no tag e.g. msg = "Hello # how are you?"
+            tags = re.findall('#[a-zA-Z0-9]+', msgDict["msg"]) # find tags
+            grpId = re.findall('(?<=\-)(.*?)(?=\@)', msgDict["jid"]) # find grp id of msg
+
+            if any(regId in grpId for regId in registeredGrps): # checking if msg comes from a registered grp
                 if tags:
-                    readMsgs.append({"tags": ["#<empty-tag>"],
-                                     "jid" : msgDict["jid"],
-                                     "msg" : msgDict["msg"],
-                                     "time": msgDict["time"]})
+                     readMsgs.append({"tags": tags, "jid" : msgDict["jid"],
+                                      "msg" : msgDict["msg"],
+                                      "time": msgDict["time"]})
+                else:
+                    tags = re.findall('#', msgDict['msg']) # finds a # with no tag e.g. msg = "Hello # how are you?"
+                    if tags:
+                        readMsgs.append({"tags": ["#<empty-tag>"],
+                                         "jid" : msgDict["jid"],
+                                         "msg" : msgDict["msg"],
+                                         "time": msgDict["time"]})
 
-    dbFile = os.path.join(parentdir, 'messages.json') # future: go for a proper db
+        dbFile = os.path.join(parentdir, 'messages.json') # future: go for a proper db
 
-    if os.path.isfile(dbFile):
-        try: # Read all data
-            with open(dbFile, 'r') as feed:
-                data = json.load(feed)
-        except IOError:
-            print "Unable to open JSON file"
+        if os.path.isfile(dbFile):
+            try: # Read all data
+                with open(dbFile, 'r') as feed:
+                    data = json.load(feed)
+            except IOError:
+                print "Unable to open JSON file"
 
-        try: # append new data and write all to file
-            with open(dbFile, 'w') as feed:
-                data.extend(readMsgs)
-                json.dump(data, feed)
-        except IOError:
-            print "unable to append to JSON file"
-    else: # initialize and feed data
+            try: # append new data and write all to file
+                with open(dbFile, 'w') as feed:
+                    data.extend(readMsgs)
+                    json.dump(data, feed)
+            except IOError:
+                print "unable to append to JSON file"
+        else: # initialize and feed data
+            try:
+                with open(dbFile, 'w') as feed:
+                    json.dump(readMsgs, feed)
+            except IOError:
+                print "unable to create new file"
+
+        bot.send_message("919790744316", "Updated messages @ %s" %
+                strftime("%H:%M:%S")) # send admin regular updates
+
+        sleep(300)
+    ################# JUNK CODE SNIPPETS ############################
+
+    #    bot.send_presence_available()
+    #    bot.set_status("Hello World")
+    #    bot.send_presence_unavailable()
+
+        #wa = WhatsappListenerClient(False)
+        # with sendReceipt = True messages are sent back from server only once
+        # bot.set_profile_pic(("/home/dobby/.config/variety/Downloaded/wallbase_leaves",))
+        #wa.login(self.username, self.password)
+        #bot.set_status("Hacking! :D")
+
+
+    """
+    #    mediaPath = "/home/dobby/.config/variety/Downloaded/Desktoppr/10164.jpg"
+        bot.upload_media(mediaPath)
+
+        usersFile = os.path.join(parentdir, 'users.json') # contains all registered users/grps
+
+        # trying to create a users.json
+        bot.get_group_info("919790744316-1391169216")
+        #
         try:
-            with open(dbFile, 'w') as feed:
-                json.dump(readMsgs, feed)
+            with open(usersFile, 'r') as userInfo:
+                users = json.load(userInfo)
         except IOError:
-            print "unable to create new file"
-
-    from time import strftime
-    bot.send_message("919790744316", "Updated messages @ %s" %
-            strftime("%H:%M:%S")) # send admin regular updates
-
-################# JUNK CODE SNIPPETS ############################
-
-#    bot.send_presence_available()
-#    bot.set_status("Hello World")
-#    bot.send_presence_unavailable()
-
-    #wa = WhatsappListenerClient(False)
-    # with sendReceipt = True messages are sent back from server only once
-    # bot.set_profile_pic(("/home/dobby/.config/variety/Downloaded/wallbase_leaves",))
-    #wa.login(self.username, self.password)
-    #bot.set_status("Hacking! :D")
-
-
-"""
-#    mediaPath = "/home/dobby/.config/variety/Downloaded/Desktoppr/10164.jpg"
-    bot.upload_media(mediaPath)
-
-    usersFile = os.path.join(parentdir, 'users.json') # contains all registered users/grps
-
-    # trying to create a users.json
-    bot.get_group_info("919790744316-1391169216")
-    #
-    try:
-        with open(usersFile, 'r') as userInfo:
-            users = json.load(userInfo)
-    except IOError:
-        #        raise IOError("Couldn't find users.json")
-        pass"""
+            #        raise IOError("Couldn't find users.json")
+            pass"""
